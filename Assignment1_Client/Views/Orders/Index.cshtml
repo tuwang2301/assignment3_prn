@@ -1,0 +1,212 @@
+﻿@model IEnumerable<Assignment1_Api.Models.Order>
+
+@{
+    ViewData["Title"] = "Index";
+    String Role = Context.Session.GetString("ROLE");
+    int? userId = Context.Session.GetInt32("USERID");
+
+
+    var currentDate = DateTime.Now;
+    // Calculate the date for one day before the current date
+    var oneDayBefore = currentDate.AddDays(-1);
+    var startOfDay = new DateTime(currentDate.Year, currentDate.Month, currentDate.Day, 7, 0, 0);
+    var startOfMonth = new DateTime(currentDate.Year, currentDate.Month, currentDate.Day, 7, 0, 0);
+    var oneMonthBefore = currentDate.AddMonths(-1);
+    // Format dates for the datetime-local input fields
+    var currentDateString = currentDate.ToString("yyyy-MM-ddTHH:mm");
+    var oneDayBeforeString = oneDayBefore.ToString("yyyy-MM-ddTHH:mm");
+    var startOfMonthString = startOfMonth.ToString("yyyy-MM-ddTHH:mm");
+    var oneMonthBeforeString = oneMonthBefore.ToString("yyyy-MM-ddTHH:mm");
+}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<div class="d-flex justify-content-between align-items-center mb-2">
+    <h1>List orders</h1>
+
+    <p>
+        <a asp-action="Create" class="btn btn-dark">Create New</a>
+    </p>
+</div>
+
+@if (ViewData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger" role="alert">@ViewData["ErrorMessage"]</div>
+}
+@if (ViewData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success" role="alert">@ViewData["SuccessMessage"]</div>
+}
+
+@if (@Role == "Admin")
+{
+    <form class="form-group my-4" asp-action="Report">
+        <h4>Generate report</h4>
+        <div class="row">
+            <div class="col-5">
+                <div class="form-group mb-2">
+                    <label for="startDate" class="control-label">Start Date</label>
+                    <input id="startDate" name="startDate" type="datetime-local" class="form-control" />
+                </div>
+            </div>
+            <div class="col-5">
+                <div class="form-group mb-2">
+                    <label for="endDate" class="control-label">End Date</label>
+                    <input id="endDate" name="endDate" type="datetime-local" class="form-control" />
+                </div>
+            </div>
+            <div class="col-2">
+                <div class="form-group mb-2">
+                    <label for="endDate" class="control-label"></label>
+                    <input type="submit" value="Generate" class="btn btn-success d-block" />
+                </div>
+            </div>
+        </div>
+    </form>
+}
+        <div class="form-group mb-2">
+            <label for="orderDate" class="control-label">Search by Order Date</label>
+            <input id="orderDate" name="orderDate" type="datetime-local" class="form-control" value="@currentDateString" />
+        </div>
+    </div>
+
+@if (Model.Count() == 0)
+{
+    <div>No orders found</div>
+} else
+{
+    <table class="table table-striped table-hover mt-2">
+        <thead>
+            <tr class="bg-info text-white">
+                <th scope="col">
+                    @Html.DisplayNameFor(model => model.OrderId)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.OrderDate)
+                </th>
+                @if (@Role == "Admin")
+                {
+                    <th>
+                        @Html.DisplayNameFor(model => model.Staff)
+                    </th>
+                }
+                <th></th>
+            </tr>
+        </thead>
+        <tbody id="orderTableBody">
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.OrderId)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.OrderDate)
+                    </td>
+                    @if (@Role == "Admin")
+                    {
+                        <td>
+                            @Html.DisplayFor(modelItem => item.Staff.Name)
+                        </td>
+                    }
+                    else
+                    {
+                        <td>
+                            <a class="btn btn-primary" asp-action="Detail" asp-route-id="@item.OrderId">Details</a>
+                        </td>
+                    }
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+<script>
+    $(document).ready(function () {
+        $('#orderDate').change(function () {
+            var orderDate = $('#orderDate').val();
+            var role = '@Role';
+            console.log(orderDate);
+            console.log(role)
+            loadData(orderDate ,role);
+        });
+        function loadData(orderDate ,role) {
+            $.ajax({
+                url: 'http://localhost:5267/api/Orders/date',
+                type: 'GET',
+                data: { orderDate: orderDate,role:role },
+                success: function (data) {
+                    var tableBody = $('#orderTableBody');
+                    tableBody.empty(); // Clear existing data
+                    data.forEach(function (item) {
+
+                        if (role === "Admin" || item.staffId === @userId) {
+                            console.log(item.staffId);
+                            var formattedOrderDate = formatDate(item.orderDate);
+
+                            var row = '<tr>' +
+                                '<td>' + item.orderId + '</td>' +
+                                '<td>' + formattedOrderDate + '</td>';
+
+                            if (role == "Admin") {
+                                getStaffName(item.staffId, function (staffName) {
+                                    row += '<td>' + staffName + '</td>';
+                                    row += '<td><a class="btn btn-primary" href="/Order/Details/' + item.orderId + '">Details</a></td>' +
+                                        '</tr>';
+                                    tableBody.append(row);
+                                });
+                            } else {
+                                row += '<td><a class="btn btn-primary" href="/Order/Details/' + item.orderId + '">Details</a></td>' +
+                                    '</tr>';
+                                tableBody.append(row);
+                            }
+                        }
+                    });
+                    console.log(data);
+                },
+                error: function (xhr, status, error) {
+                    console.error(error);
+                    $('#orderTableBody').html('<tr><td colspan="3">No Order found.</td></tr>');
+                }
+            });
+        }
+       
+        function formatDate(dateString) {
+            var date = new Date(dateString);
+
+            var day = date.getDate();
+            var month = date.getMonth() + 1;
+            var year = date.getFullYear();
+
+            var hour = date.getHours();
+            var minute = date.getMinutes();
+            var second = date.getSeconds();
+
+            var ampm = hour >= 12 ? 'CH' : 'SA';
+            hour = hour % 12;
+            hour = hour ? hour : 12; // 0 giờ sẽ được chuyển thành 12 giờ
+
+            // Thêm số 0 vào trước nếu cần thiết
+            day = day < 10 ? '0' + day : day;
+            month = month < 10 ? '0' + month : month;
+            hour = hour < 10 ? '0' + hour : hour;
+            minute = minute < 10 ? '0' + minute : minute;
+            second = second < 10 ? '0' + second : second;
+
+            return day + '/' + month + '/' + year + ' ' + hour + ':' + minute + ':' + second + ' ' + ampm;
+        }
+
+        function getStaffName(staffId, callback) {
+            $.ajax({
+                url: 'http://localhost:5267/api/Staffs/' + staffId,
+                type: 'GET',
+                success: function (data) {
+                    callback(data.name);
+                },
+                error: function (xhr, status, error) {
+                    console.error(error);
+                    callback('N/A'); // Display "N/A" if there's an error
+                }
+            });
+        }
+    });
+</script>

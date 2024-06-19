@@ -1,0 +1,55 @@
+@model Assignment1_Client.Models.StaffDTO
+@{
+    ViewData["Title"] = "Edit";
+}
+
+<h1>Edit profile</h1>
+
+@if (ViewData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger" role="alert">@ViewData["ErrorMessage"]</div>
+}
+@if (ViewData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success" role="alert">@ViewData["SuccessMessage"]</div>
+}
+
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form method="POST">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+        
+            <div class="form-group mb-2">
+                <label asp-for="Name" class="control-label mb-1"></label>
+                <input asp-for="Name" type="Name" class="form-control" readonly />
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+            <div class="form-group mb-2">
+                <label asp-for="OldPassword" class="control-label mb-1">Enter Old Password</label>
+                <input asp-for="OldPassword" type="password" class="form-control" />
+                <span asp-validation-for="OldPassword" class="text-danger"></span>
+            </div>
+            <div class="form-group mb-2">
+                <label asp-for="Password" class="control-label mb-1"></label>
+                <input asp-for="Password" type="password" class="form-control" />
+                <span asp-validation-for="Password" class="text-danger"></span>
+            </div>
+            <div class="form-group mb-2">
+                <label asp-for="RePassword" class="control-label mb-1">Re-enter Password</label>
+                <input asp-for="RePassword" type="password" class="form-control" />
+                <span asp-validation-for="RePassword" class="text-danger"></span>
+            </div>
+           
+            <div class="form-group mb-2">
+                <input type="submit" value="Save" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

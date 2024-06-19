@@ -1,0 +1,103 @@
+﻿@{
+    String Role = Context.Session.GetString("ROLE");
+    ViewData["Title"] = "OrderDetail";
+    Assignment1_Api.Models.Order Order = ViewData["Order"] != null ? (Assignment1_Api.Models.Order)ViewData["Order"] : new Assignment1_Api.Models.Order();
+    List<Assignment1_Api.Models.OrderDetail> OrderDetails = ViewData["OrderDetails"] != null ? (List<Assignment1_Api.Models.OrderDetail>)ViewData["OrderDetails"] : new List<Assignment1_Api.Models.OrderDetail>();
+}
+
+<h1>Order Detail</h1>
+
+@if (ViewData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger" role="alert">@ViewData["ErrorMessage"]</div>
+}
+@if (ViewData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success" role="alert">@ViewData["SuccessMessage"]</div>
+}
+
+<div class="row mt-5">
+    <div class="col-md-4">
+        <h4 class="text-primary">Order</h4>
+        <dl class="row">
+            <dt class="col-sm-4">
+                Order Id
+            </dt>
+            <dd class="col-sm-8">
+                @Order.OrderId
+            </dd>
+            <dt class="col-sm-4">
+                Ordered Date
+            </dt>
+            <dd class="col-sm-8">
+                @Order.OrderDate
+            </dd>
+        </dl>
+        <hr/>
+        <h4 class="text-success">Member</h4>
+        <dl class="row">
+            <dt class="col-sm-4">
+                Name
+            </dt>
+            <dd class="col-sm-8">
+                @Order.Staff.Name
+            </dd>
+        </dl>
+    </div>
+    <div class="col-md-8">
+        <h4 class="text-danger">Items</h4>
+        <table class="table">
+            <thead>
+                <tr class="bg-dark text-white">
+                    <th>
+                        Name
+                    </th>
+                    <th>
+                        Unit Price
+                    </th>
+                    <th>
+                        Quantity
+                    </th>
+                    <th>
+                        Total
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in OrderDetails)
+                {
+                    <tr>
+                        <td>
+                            @item.Product.ProductName
+                        </td>
+                        <td>
+                            @item.UnitPrice
+                        </td>
+                        <td>
+                            @item.Quantity
+                        </td>
+                        <td>
+                            @(item.UnitPrice * item.Quantity)
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+@if (Role != null && Role == "Admin")
+{
+    <div>
+     @*    @if (Order.OrderStatus == 0)
+        {
+            <span><a>Edit</a> |</span>
+        } *@
+        <a asp-action="Index">Back to List</a>
+    </div>
+} else
+{
+    <div>
+        <a asp-action="OrderHistory">Back to List</a>
+    </div>
+}
+

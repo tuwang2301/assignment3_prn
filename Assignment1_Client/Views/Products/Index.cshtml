@@ -1,0 +1,155 @@
+﻿@model Assignment1_Client.Models.SearchViewModel
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>Index</h1>
+
+<p>
+    <a class="btn btn-success" asp-action="Create">Create New</a>
+</p>
+<form id="searchForm" method="get" class="d-flex justify-content-around align-items-center mb-3">
+    <div class="form-group mt-3 d-flex">
+        <label for="ProductName" class="control-label">Product Name</label>
+        <input type="text" id="ProductName" name="ProductName" class="form-control" />
+    </div>
+    <div class="form-group mt-3 d-flex">
+        <label for="UnitPrice" class="control-label">Unit Price</label>
+        <input type="number" id="UnitPrice" name="UnitPrice" class="form-control" />
+    </div>
+    <div class="form-group mt-3">
+        <button type="submit" class="btn btn-primary">Search</button>
+    </div>
+</form>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>
+                Product Name
+            </th>
+            <th>
+                Unit Price
+            </th>
+            <th>
+                Category
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody id="searchResults">
+       
+    </tbody>
+</table>
+
+<script>
+
+    fetch("http://localhost:5267/api/Products")
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok ' + response.statusText);
+            }
+            return response.json();
+        })
+        .then(data => {
+            const searchResults = document.getElementById("searchResults");
+            searchResults.innerHTML = '';
+
+            // Hiển thị kết quả
+            fetchData(data);
+        })
+        .catch(error => {
+            console.error('There has been a problem with your fetch operation:', error);
+        });
+
+    document.getElementById("searchForm").addEventListener("submit", function(event) {
+        event.preventDefault(); // Ngăn chặn hành vi gửi form mặc định
+
+        const productName = document.getElementById("ProductName").value;
+        const unitPrice = document.getElementById("UnitPrice").value;
+
+        let url = `http://localhost:5267/api/Products/Search`;
+
+        /// Kiểm tra nếu productName hoặc unitPrice rỗng
+        if (!productName && !unitPrice) {
+            console.log("Both productName and unitPrice are empty");
+            // Thực hiện các hành động khác nếu cần thiết khi cả hai đều rỗng
+        } else {
+            // Mã hóa các tham số trước khi thêm vào URL
+            const encodedProductName = encodeURIComponent(productName);
+            const encodedUnitPrice = encodeURIComponent(unitPrice);
+
+            // Xây dựng URL cho API tìm kiếm
+
+            // Thêm tham số vào URL nếu chúng không rỗng
+            if (encodedProductName) {
+                url += `?productName=${encodedProductName}`;
+            }
+            if (encodedUnitPrice) {
+                url += `${encodedProductName ? '&' : '?'}unitPrice=${encodedUnitPrice}`;
+            }
+
+            console.log("Final URL:", url);
+            // Thực hiện fetch API với URL đã xây dựng
+        }
+
+        fetch(url)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok ' + response.statusText);
+                }
+                return response.json();
+            })
+            .then(data => {
+                const searchResults = document.getElementById("searchResults");
+                searchResults.innerHTML = '';
+
+                // Hiển thị kết quả
+                fetchData(data);
+            })
+            .catch(error => {
+                console.error('There has been a problem with your fetch operation:', error);
+            });
+    });
+
+
+
+    function fetchData(data) {
+        data.forEach(product => {
+            console.log(product);
+            const productHtml = `
+                                    <tr>
+                                        <td>${product.productName}</td>
+                                        <td>${product.unitPrice}</td>
+                                        <td>${product.category?.categoryName || 'N/A'}</td>
+                                        <td>
+                                            <a class="btn btn-success" asp-action="Edit" href="Products/Edit/${product.productId}">Edit</a>
+                                                    <a class="btn btn-primary" asp-action="Detail" asp-route-id="Products/Detail/${product.productId}">Detail</a>
+                                                <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#modal_${product.productId}">
+                                                Delete
+                                            </button>
+                                                <div class="modal fade" id="modal_${product.productId}" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                                <div class="modal-dialog">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title" id="exampleModalLabel">Delete Confirmation</h5>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                                Do you want to delete <span class="fw-bold text-danger">${product.productName}</span>?
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                                <a id="delete-confirm-button" class="btn btn-danger" href="/Products/Delete/${product.productId}">Delete</a>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                `;
+            searchResults.insertAdjacentHTML('beforeend', productHtml);
+        });
+    }
+</script>

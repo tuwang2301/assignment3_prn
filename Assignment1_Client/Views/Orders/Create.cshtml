@@ -1,0 +1,140 @@
+﻿@model Assignment1_Api.DTO.OrderRequest
+@{
+    ViewData["Title"] = "Create";
+    List<Assignment1_Api.DTO.OrderItemRequest> OrderItems = (List<Assignment1_Api.DTO.OrderItemRequest>)ViewData["OrderItems"];
+    string Role = Context.Session.GetString("ROLE");
+}
+
+<h1>Create an order</h1>
+
+@if (ViewData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger" role="alert">@ViewData["ErrorMessage"]</div>
+}
+@if (ViewData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success" role="alert">@ViewData["SuccessMessage"]</div>
+}
+
+<hr />
+<div class="row">
+    <div class="col-md-8">
+        <div>
+            <h4>Add Product:</h4>
+            <form class="form-group mb-2" method="post" asp-action="AddOrderItem">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                           <label asp-for="ProductId" class="control-label mb-1">Name</label>
+                            <select asp-for="ProductId" id="ProductId" class="form-control"> 
+                                @foreach (var std in (List<Assignment1_Api.Models.Product>)ViewData["Products"])
+                                {
+                                    <option value="@std.ProductId">@std.ProductName</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label asp-for="Quantity" class="control-label mb-1">Quantity</label>
+                            <input asp-for="Quantity" value="1" min="1" type="number" class="form-control" /> 
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label asp-for="Price" class="control-label mb-1">Price</label>
+                            <input asp-for="Price" value="1" min="1" type="number" class="form-control" />
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="control-label"></label>
+                            <input type="submit" value="Add" class="btn btn-warning d-block" />
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <hr />
+         <div>
+            <h4>List items</h4>
+            @if (OrderItems == null || OrderItems.Count == 0)
+            {
+                <p>No items</p>
+            }
+            else
+            {
+                decimal total = 0;
+                int stt = 1;
+
+                <table class="table">
+                    <tr>
+                        <th>#</th>
+                        <th>Product</th>
+                        <th>Price</th>
+                        <th>Quantity</th>
+                        <th>Total</th>
+                        <th></th>
+                    </tr>
+                    @foreach (var cartitem in OrderItems)
+                    {
+                        var totalMoney = cartitem.Quantity * cartitem.Price;
+                        total += totalMoney;
+
+                        <tr>
+                            <td>@(stt++)</td>
+                            <td>@cartitem.Product.ProductName</td>
+                            <td>@(cartitem.Price.ToString("n0"))</td>
+                            <td>@cartitem.Quantity</td>
+                            <td>@(totalMoney.ToString("n0"))</td>
+                            <td>
+                                <form asp-action="RemoveOrderItem">
+                                    <input hidden asp-for="ProductId" value="@cartitem.Product.ProductId" />
+                                    <input type="submit" value="Delete" class="btn btn-danger" />
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                    <tr>
+                        <td colspan="4" class="text-right">Total</td>
+                        <td>@(total.ToString("n0"))</td>
+                        <td></td>
+                    </tr>
+                </table>
+            }
+        </div> 
+    </div>
+    <div class="col-md-4">
+        <form asp-action="Create">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            @if (Role == "Admin")
+            {
+                <div class="form-group mb-2">
+                    <label asp-for="StaffId" class="control-label mb-1">Staffs</label>
+                    <select asp-for="StaffId" class="form-control">
+                        @foreach (var std in (List<Assignment1_Api.Models.Staff>)ViewData["Staffs"])
+                        {
+                            <option value="@std.StaffId">@std.Name</option>
+                        }
+                    </select>
+                </div>
+            }
+            <div class="form-group mt-4 mb-2">
+                <input type="submit" value="Create" class="btn btn-primary" />
+
+                @if (Role == "Admin")
+                {
+                    <a class="btn btn-danger" asp-action="Index">Cancel</a>
+                }
+                else
+                {
+                    <a class="btn btn-danger" asp-action="OrderHistory">Cancel</a>
+                }
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

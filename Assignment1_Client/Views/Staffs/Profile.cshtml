@@ -1,0 +1,39 @@
+﻿@model Assignment1_Api.Models.Staff
+
+@{
+    ViewData["Title"] = "Profile";
+    String Username = Context.Session.GetString("USERNAME");
+}
+
+<h1>My profile</h1>
+
+@if (ViewData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger" role="alert">@ViewData["ErrorMessage"]</div>
+}
+@if (ViewData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success" role="alert">@ViewData["SuccessMessage"]</div>
+}
+
+<hr />
+<div>
+    <dl class="row">
+      
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Name)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Name)
+        </dd>
+   
+    </dl>
+
+    @if (Username != null)
+    {
+        <a class="btn btn-warning" asp-action="EditProfile">Edit</a>
+    } else
+    {
+        <a class="btn btn-warning" asp-action="Edit">Edit</a>
+    }
+</div>
