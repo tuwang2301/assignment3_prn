@@ -1,6 +1,7 @@
 @model Assignment1_Client.Models.StaffDTO
 @{
     ViewData["Title"] = "Edit";
+    int? UserId = Context.Session.GetInt32("USERID");
 }
 
 <h1>Edit profile</h1>
@@ -15,11 +16,12 @@
 }
 
 <hr />
+<div id="message"></div>
 <div class="row">
     <div class="col-md-4">
-        <form method="POST">
+        <form id="profileForm">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-        
+
             <div class="form-group mb-2">
                 <label asp-for="Name" class="control-label mb-1"></label>
                 <input asp-for="Name" type="Name" class="form-control" readonly />
@@ -40,7 +42,7 @@
                 <input asp-for="RePassword" type="password" class="form-control" />
                 <span asp-validation-for="RePassword" class="text-danger"></span>
             </div>
-           
+
             <div class="form-group mb-2">
                 <input type="submit" value="Save" class="btn btn-primary" />
             </div>
@@ -52,4 +54,57 @@
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
+    <script>
+        document.getElementById('profileForm').addEventListener('submit', async function (event) {
+            event.preventDefault(); // Prevent form from submitting the traditional way
+
+            // Extract user ID from session
+            const userId = @UserId;
+            if (!userId) {
+                document.getElementById('message').innerHTML = `<div class="alert alert-danger">Session expired or user not logged in.</div>`;
+                return;
+            }
+
+            // Fetch current staff information
+            try {
+
+                // Collect form data
+                const formData = new FormData(this);
+                const jsonData = Object.fromEntries(formData.entries());
+
+                // Validate re-password
+                if (jsonData.Password !== jsonData.RePassword) {
+                    document.getElementById('message').innerHTML = `<div class="alert alert-danger">Your password and re-password don't match!</div>`;
+                    return;
+                }
+
+                // Prepare data for API request
+                const requestData = {
+                    staffId: userId,
+                    name: jsonData.Name,
+                    password: jsonData.Password,
+                };
+
+                console.log("aaaaa" + userId);
+                console.log(requestData)
+                const updateResponse = await fetch(`http://localhost:5267/api/Staffs/${userId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestData)
+                });
+
+                if (updateResponse.ok) {
+                    document.getElementById('message').innerHTML = `<div class="alert alert-success">Profile updated successfully.</div>`;
+                } else {
+                    document.getElementById('message').innerHTML = `<div class="alert alert-danger">Failed to update profile. Please try again later.</div>`;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('message').innerHTML = `<div class="alert alert-danger">An error occurred. Please try again later.</div>`;
+            }
+        });
+    </script>
+
 }
