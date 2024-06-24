@@ -10,7 +10,7 @@
 <hr />
 <div class="row">
     <div class="col-md-4">
-        <form asp-action="Edit">
+        <form id="editStaffForm" asp-action="Edit" asp-route-id="@Model.StaffId">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <input type="hidden" asp-for="StaffId" />
             <div class="form-group mt-3">
@@ -48,5 +48,53 @@
 </div>
 
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+
+        document.getElementById("editStaffForm").addEventListener("submit", function (event) {
+            event.preventDefault(); // Ngăn chặn hành động submit mặc định của form
+
+            const formData = new FormData(document.getElementById("editStaffForm"));
+            const requestData = {};
+
+            // Lọc và xử lý dữ liệu từ formData
+            for (const [key, value] of formData.entries()) {
+                // Loại bỏ các giá trị không hợp lệ
+                if (value !== null && value !== undefined && value !== "") {
+                    requestData[key] = value;
+                }
+            }
+
+            console.log("Request Data:", requestData);
+
+            const editStaffUrl = `http://localhost:5267/api/Staffs/${@Model.StaffId}`;
+
+            fetch(editStaffUrl, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(requestData)
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    console.log(response);
+                    return response;
+                })
+                .then(data => {
+                    console.log('Staff updated successfully:', data);
+                    window.location.replace("http://localhost:5207/Staffs");
+                    alert('Staff updated successfully');
+                })
+                .catch(error => {
+                    console.error('Error updating Staff:', error);
+                    alert('Error updating Staff');
+                });
+        });
+    </script>
 }

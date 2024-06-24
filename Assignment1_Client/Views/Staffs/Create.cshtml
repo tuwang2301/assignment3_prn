@@ -10,7 +10,7 @@
 <hr />
 <div class="row">
     <div class="col-md-4">
-        <form asp-action="Create">
+        <form id="createStaffForm" asp-action="Create">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <div class="form-group">
                 <label asp-for="Name" class="control-label"></label>
@@ -26,7 +26,7 @@
                 <label for="Role" class="control-label"></label>
                 <select name="Role" id="Role">
                     <option value="1">Admin</option>
-                    <option value="2">Customer</option>
+                    <option value="0">Staff</option>
                 </select>
                 <span asp-validation-for="Role" class="text-danger"></span>
             </div>
@@ -43,4 +43,41 @@
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+
+    <script>
+        document.getElementById("createStaffForm").addEventListener("submit", function (event) {
+            event.preventDefault();
+            const createStaffUrl = "http://localhost:5267/api/Staffs"; 
+
+            const formData = new FormData(document.getElementById("createStaffForm"));
+            const requestData = {};
+            formData.forEach((value, key) => {
+                requestData[key] = value;
+            });
+
+            fetch(createStaffUrl, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(requestData)
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Staff created successfully:', data);
+                    window.location.replace("http://localhost:5207/Staffs");
+                    alert("Staff created successfully !");
+
+                })
+                .catch(error => {
+                    console.error('Error creating staff:', error);
+                    alert("Error creating Staff !");
+                });
+        });
+    </script>
 }

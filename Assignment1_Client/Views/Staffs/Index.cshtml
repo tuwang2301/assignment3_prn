@@ -9,10 +9,10 @@
 <p>
     <a asp-action="Create">Create New</a>
 </p>
-<form action="/Staffs/Search" method="post">
+<form id="searchForm" action="/Staffs/Search" method="post">
     <div class="form-group">
         <label class="control-label" for="search">Search by Name: </label>
-        <input class="form-control" type="text" name="keyword" id="keyword" required/>
+        <input class="form-control" id="StaffName" type="text" name="keyword" id="keyword" required/>
         <button type="submit" class="btn btn-primary">Search</button>
     </div>
 </form>
@@ -31,31 +31,112 @@
             <th></th>
         </tr>
     </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.Name)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Password)
-            </td>
-            <td>
-                    @if (item.Role == 1)
-                    {
-                        <text>Admin</text>
-                    }
-                    else
-                    {
-                        <text>Customer</text>
-                    }
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.StaffId">Edit</a> |
-                <a asp-action="Detail" asp-route-id="@item.StaffId">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.StaffId">Delete</a>
-            </td>
-        </tr>
-}
+    <tbody id="searchResults">
     </tbody>
 </table>
+
+<script>
+
+    fetch("http://localhost:5267/api/Staffs")
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok ' + response.statusText);
+            }
+            return response.json();
+        })
+        .then(data => {
+            const searchResults = document.getElementById("searchResults");
+            searchResults.innerHTML = '';
+
+            // Hiển thị kết quả
+            fetchData(data);
+        })
+        .catch(error => {
+            console.error('There has been a problem with your fetch operation:', error);
+        });
+
+    document.getElementById("searchForm").addEventListener("submit", function (event) {
+        event.preventDefault(); // Ngăn chặn hành vi gửi form mặc định
+
+        const staffName = document.getElementById("StaffName").value;
+
+        let url = `http://localhost:5267/api/Staffs/Search`;
+
+        /// Kiểm tra nếu staffName rỗng
+        if (!staffName) {
+            console.log("Staff Name is empty");
+            // Thực hiện các hành động khác nếu cần thiết khi cả hai đều rỗng
+        } else {
+            // Mã hóa các tham số trước khi thêm vào URL
+            const encodedStaffName = encodeURIComponent(staffName);
+            // Xây dựng URL cho API tìm kiếm
+
+            // Thêm tham số vào URL nếu chúng không rỗng
+            if (encodedStaffName) {
+                url += `/${staffName}`;
+            }
+
+            console.log("Final URL:", url);
+            // Thực hiện fetch API với URL đã xây dựng
+        }
+
+        fetch(url)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok ' + response.statusText);
+                }
+                return response.json();
+            })
+            .then(data => {
+                const searchResults = document.getElementById("searchResults");
+                searchResults.innerHTML = '';
+
+                // Hiển thị kết quả
+                fetchData(data);
+            })
+            .catch(error => {
+                console.error('There has been a problem with your fetch operation:', error);
+            });
+    });
+
+
+
+    function fetchData(data) {
+        data.forEach(staff => {
+            console.log(staff);
+            var role = (staff.role === 1) ? 'Admin' : 'Staff';
+            const staffHtml = `
+                                        <tr>
+                                            <td>${staff.name}</td>
+                                            <td>${staff.password}</td>
+                                            <td>${role}</td>
+                                            <td>
+                                                <a class="btn btn-success" asp-action="Edit" href="Staffs/Edit/${staff.staffId}">Edit</a>
+                                                        <a class="btn btn-primary" asp-action="Detail" href="Staffs/Detail/${staff.staffId}">Detail</a>
+                                                        <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#modal_${staff.staffId}">
+                                                    Delete
+                                                </button>
+                                                        <div class="modal fade" id="modal_${staff.staffId}" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                                    <div class="modal-dialog">
+                                                        <div class="modal-content">
+                                                            <div class="modal-header">
+                                                                <h5 class="modal-title" id="exampleModalLabel">Delete Confirmation</h5>
+                                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                            </div>
+                                                            <div class="modal-body">
+                                                                        Do you want to delete <span class="fw-bold text-danger">${staff.name}</span>?
+                                                            </div>
+                                                            <div class="modal-footer">
+                                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                                        <a id="delete-confirm-button" class="btn btn-danger" href="/Staffs/Delete/${staff.staffId}">Delete</a>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    `;
+            searchResults.insertAdjacentHTML('beforeend', staffHtml);
+        });
+    }
+</script>
