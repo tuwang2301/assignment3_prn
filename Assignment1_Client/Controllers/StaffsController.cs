@@ -162,6 +162,7 @@ namespace Assignment1_Client.Controllers
         public async Task<IActionResult> Delete(int id)
         {
             int? userId = HttpContext.Session.GetInt32("USERID");
+
             string Role = HttpContext.Session.GetString("ROLE");
 
             if (userId == null)
@@ -172,16 +173,19 @@ namespace Assignment1_Client.Controllers
             else if (Role != "Admin")
             {
                 TempData["ErrorMessage"] = "You don't have permission to access this page.";
-                return RedirectToAction("Profile", "Staff");
+                return RedirectToAction("Profile", "Staffs");
             }
-            Staff staff = await ApiHandler.DeserializeApiResponse<Staff>(StaffApiUrl + "/" + id, HttpMethod.Get);
 
-            if (TempData != null)
+            Staff Staff = await ApiHandler.DeserializeApiResponse<Staff>(StaffApiUrl + "/" + id, HttpMethod.Get);
+            if (Staff == null)
             {
-                ViewData["SuccessMessage"] = TempData["SuccessMessage"];
-                ViewData["ErrorMessage"] = TempData["ErrorMessage"];
+                TempData["ErrorMessage"] = "Not found";
+                return RedirectToAction("Index");
             }
-            return View(staff);
+
+            Staff deleteStaff = await ApiHandler.DeserializeApiResponse<Staff>(StaffApiUrl + "/" + id, HttpMethod.Delete);
+
+            return RedirectToAction("Index");
         }
 
         [HttpPost]
