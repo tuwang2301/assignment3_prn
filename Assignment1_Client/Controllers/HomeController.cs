@@ -75,7 +75,7 @@ namespace Assignment1_Client.Controllers
             {
                 HttpContext.Session.SetInt32("USERID", account.StaffId);
                 HttpContext.Session.SetString("USERNAME", account.Name);
-                HttpContext.Session.SetString("ROLE", account.Role == 1 || account.Name == "admin@estore.com" ? "Admin": "Customer");
+                HttpContext.Session.SetString("ROLE", account.Role == 1 || account.Name == "admin@estore.com" ? "Admin": "Staff");
                 if (account.Role == 1)
                     return RedirectToAction("Index", "Staffs");
                 else

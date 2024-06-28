@@ -12,9 +12,10 @@
 <h1>Register Page</h1>
 <hr />
 <div class="container">
+    <div id="message"></div>
     <div class="row">
         <div class="col-md-4">
-            <form method="post">
+            <form id="registerForm">
           
                 <div class="form-group mb-2">
                     <label asp-for="Name" class="control-label mb-1"></label>
@@ -42,4 +43,54 @@
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
+    <script>
+        document.getElementById('registerForm').addEventListener('submit', async function (event) {
+            event.preventDefault(); 
+
+            const formData = new FormData(this);
+
+            const jsonData = Object.fromEntries(formData.entries());
+
+            try {
+
+                //check duplicate
+                const checkResponse = await fetch(`http://localhost:5267/api/Staffs/Name/${encodeURIComponent(jsonData.Name)}`, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                    }
+                });
+
+                if (checkResponse.ok) {
+                    // Name already exists
+                    document.getElementById('message').innerHTML = `<div class="alert alert-danger">Name already exists.</div>`;
+                    return;
+                } else if (checkResponse.status !== 404) {
+                    // Handle unexpected error
+                    throw new Error('Error checking name availability');
+                }
+
+                //register
+                const response = await fetch('http://localhost:5267/api/Staffs', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(jsonData)
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    document.getElementById('message').innerHTML = `<div class="alert alert-success">Registered new account successfully.</div>`;
+                    setTimeout(() => window.location.href = '/Home/Index', 2000);
+                } else {
+                    
+                    const errorData = await response.json();
+                    document.getElementById('message').innerHTML = `<div class="alert alert-danger">${errorData.title || 'An error occurred.'}</div>`;
+                }
+            } catch (error) {
+                document.getElementById('message').innerHTML = `<div class="alert alert-danger">An error occurred: ${error.message}</div>`;
+            }
+        });
+    </script>
 } 
