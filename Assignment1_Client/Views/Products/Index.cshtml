@@ -125,7 +125,7 @@
                                         <td>${product.category?.categoryName || 'N/A'}</td>
                                         <td>
                                             <a class="btn btn-success" asp-action="Edit" href="Products/Edit/${product.productId}">Edit</a>
-                                                    <a class="btn btn-primary" asp-action="Detail" asp-route-id="Products/Detail/${product.productId}">Detail</a>
+                                                        <a class="btn btn-primary" asp-action="Detail" href="Products/Detail/${product.productId}">Detail</a>
                                                 <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#modal_${product.productId}">
                                                 Delete
                                             </button>
